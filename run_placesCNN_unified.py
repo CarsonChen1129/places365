@@ -59,19 +59,19 @@ def load_labels():
 def hook_feature(module, input, output):
     features_blobs.append(np.squeeze(output.data.cpu().numpy()))
 
-def returnCAM(feature_conv, weight_softmax, class_idx):
-    # generate the class activation maps upsample to 256x256
-    size_upsample = (256, 256)
-    nc, h, w = feature_conv.shape
-    output_cam = []
-    for idx in class_idx:
-        cam = weight_softmax[class_idx].dot(feature_conv.reshape((nc, h*w)))
-        cam = cam.reshape(h, w)
-        cam = cam - np.min(cam)
-        cam_img = cam / np.max(cam)
-        cam_img = np.uint8(255 * cam_img)
-        output_cam.append(imresize(cam_img, size_upsample))
-    return output_cam
+# def returnCAM(feature_conv, weight_softmax, class_idx):
+#     # generate the class activation maps upsample to 256x256
+#     size_upsample = (256, 256)
+#     nc, h, w = feature_conv.shape
+#     output_cam = []
+#     for idx in class_idx:
+#         cam = weight_softmax[class_idx].dot(feature_conv.reshape((nc, h*w)))
+#         cam = cam.reshape(h, w)
+#         cam = cam - np.min(cam)
+#         cam_img = cam / np.max(cam)
+#         cam_img = np.uint8(255 * cam_img)
+#         output_cam.append(imresize(cam_img, size_upsample))
+#     return output_cam
 
 def returnTF():
 # load the image transformer
@@ -155,18 +155,21 @@ for i in range(0, 5):
 
 # output the scene attributes
 responses_attribute = W_attribute.dot(features_blobs[1])
+print(type(features_blobs[1]))
+print(features_blobs[0].shape)
+print(features_blobs[1].shape)
 idx_a = np.argsort(responses_attribute)
 print('--SCENE ATTRIBUTES:')
 print(', '.join([labels_attribute[idx_a[i]] for i in range(-1,-10,-1)]))
 
 
-# generate class activation mapping
-print('Class activation map is saved as cam.jpg')
-CAMs = returnCAM(features_blobs[0], weight_softmax, [idx[0]])
-
-# render the CAM and output
-img = cv2.imread('test.jpg')
-height, width, _ = img.shape
-heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
-result = heatmap * 0.4 + img * 0.5
-cv2.imwrite('cam.jpg', result)
+# # generate class activation mapping
+# print('Class activation map is saved as cam.jpg')
+# CAMs = returnCAM(features_blobs[0], weight_softmax, [idx[0]])
+#
+# # render the CAM and output
+# img = cv2.imread('test.jpg')
+# height, width, _ = img.shape
+# heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
+# result = heatmap * 0.4 + img * 0.5
+# cv2.imwrite('cam.jpg', result)
